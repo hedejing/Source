@@ -1,0 +1,10 @@
+
+
+#define USE_OPENGL_CONTEXT
+//#define USE_OPENGL_ES_CONTEXT
+
+
+#ifdef ANDROID
+#define USE_OPENGL_ES_CONTEXT
+#undef USE_OPENGL_CONTEXT
+#endif
