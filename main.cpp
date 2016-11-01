@@ -4,6 +4,7 @@
 #include "app_edushi.h"
 #include "app_forward.h"
 #include "app_TAA.h"
+#include "app_VR_Experience.h"
 //#include "app_VR.h"
 #include "GLFWFramework.h"
 //#include "edushiKey.h"
@@ -28,7 +29,7 @@ void main() {
 	auto app5 = new App_Forward;
 
 	auto app6 = new App_TAA;
-	fw.app = app6;
+	fw.app = new App_VR_Experience;
 	fw.Init();
 
 	//edushi_key ek;

@@ -74,7 +74,7 @@ T HermiteInterpolate(
 
 class Interpolation {
 public:
-	void SetData(vector<double>& x, vector<Vector3>& y){
+	void SetData(const vector<double>& x, const vector<Vector3>& y){
 		this->x = x;
 		this->y = y;
 		n = x.size();
