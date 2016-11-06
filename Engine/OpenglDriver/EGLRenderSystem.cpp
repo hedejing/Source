@@ -8,6 +8,9 @@
 #include "ResourceManager.h"
 #include "EGLRenderTarget.h"
 #include "GLSampler.h"
+
+//#define VRInstance
+
 namespace HW
 {
 
@@ -357,7 +360,11 @@ namespace HW
 	 void EGLRenderSystem::DrawGeometry(Geometry* geo)
 	 {
 		 GLGeometry* g = static_cast<GLGeometry*>(geo);
+#ifdef VRInstance
+		 g->DrawInstance(2);
+#else
 		 g->Draw();
+#endif
 	 }
 
 	 void EGLRenderSystem::DrawGeometryInstance(Geometry* geo, int num)

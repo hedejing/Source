@@ -16,17 +16,29 @@ void VRForwardEffect::Init()
 	mainwindow = rt_mgr.get("MainWindow");
 
 	rt_render_left = rt_mgr.CreateRenderTargetFromPreset("basic", "effect_forward_left");
+	for (auto& x : rt_render_left->m_attach_textures) {
+		x.second->MSAASampleNum = 4;
+	}
 	rt_render_right = rt_mgr.CreateRenderTargetFromPreset("basic", "effect_forward_right");
+	for (auto& x : rt_render_right->m_attach_textures) {
+		x.second->MSAASampleNum = 4;
+	}
+	rt_resolve_left = rt_mgr.CreateRenderTargetFromPreset("basic", "msaa_resolve_left");
+	rt_resolve_left->createInternalRes();
 	rt_render_left->createInternalRes();
+
+	rt_resolve_right = rt_mgr.CreateRenderTargetFromPreset("basic", "msaa_resolve_right");
+	rt_resolve_right->createInternalRes();
+
 	rt_render_right->createInternalRes();
 
 	auto& tm = TextureManager::getInstance();
 
-	out_color_left = tm.get("effect_forward_left_tex1");
-	out_depth_left = tm.get("effect_forward_left_tex2");
+	out_color_left = tm.get("msaa_resolve_left_tex1");
+	out_depth_left = tm.get("msaa_resolve_left_tex2");
 
-	out_color_right = tm.get("effect_forward_right_tex1");
-	out_depth_right = tm.get("effect_forward_right_tex2");
+	out_color_right = tm.get("msaa_resolve_right_tex1");
+	out_depth_right = tm.get("msaa_resolve_right_tex2");
 
 	forward_pass = PassManager::getInstance().LoadPass("forward_prog.json");
 }
@@ -50,13 +62,21 @@ void VRForwardEffect::Render()
 	GlobalVariablePool* gp = GlobalVariablePool::GetSingletonPtr();
 	gp->SetProjectMatrix(projLeft);
 	gp->SetViewMatrix(viewLeft);
-	mRenderSystem->RenderPass(NULL, queue, forward_pass, rt_render_left);
+	/*forward_pass->mProgram->setProgramConstantData("Projection", &projLeft, "mat4", sizeof(Matrix4));
+	forward_pass->mProgram->setProgramConstantData("ViewMatrix", &viewLeft, "mat4", sizeof(Matrix4));*/
 
+	mRenderSystem->RenderPass(NULL, queue, forward_pass, rt_render_left);
+	rt_render_left->BlitTexture(rt_resolve_left, "color0", "color0");
+	rt_render_left->BlitTexture(rt_resolve_left, "depth", "depth");
 	//**********************************************************************************************************************
 	//************************						RIGHT										 ***************************
 	//**********************************************************************************************************************
 	gp->SetProjectMatrix(projRight);
 	gp->SetViewMatrix(viewRight);
+	/*forward_pass->mProgram->setProgramConstantData("Projection", &projRight, "mat4", sizeof(Matrix4));
+	forward_pass->mProgram->setProgramConstantData("ViewMatrix", &viewRight, "mat4", sizeof(Matrix4));*/
+	rt_render_right->BlitTexture(rt_resolve_right, "color0", "color0");
+	rt_render_right->BlitTexture(rt_resolve_right, "depth", "depth");
 	mRenderSystem->RenderPass(NULL, queue, forward_pass, rt_render_right);
 }
 

@@ -3,17 +3,20 @@
 #include "AppFrameWork2.h"
 #include "pattern.h"
 #include "openvr.h"
-#include "VRForwardPipeline.h"
-
+#include "VRInstanceForwardPipeline.h"
 #include <fstream>
+#include "VRForwardPipeline.h"
+#include "SimpleProfile.h"
 
 #define VR
+//#define VRInstance
 class App_VR_Experience :public App {
 public:
 	bool free = true;
 	int PatternMode = 0;	//0:speed 1:interpolation
 	vector<InterpData> marks;
 	Pattern* pattern;
+	SimpleProfile profile;
 
 	void Init() {
 		render = new EGLRenderSystem;
@@ -25,7 +28,6 @@ public:
 		//LoadMarks("test2.txt");
 
 		pattern = new SpeedTest(camera, 0, 0, 2, 0);
-
 		//pattern = new InterpolationTest(camera, marks);
 #ifdef VR
 		VRInit();
@@ -35,8 +37,13 @@ public:
 	void InitPipeline()
 	{
 #ifdef VR
-		pipeline = new VRForwardPipeline;
-		auto p = static_cast<VRForwardPipeline*>(pipeline);
+	#ifdef VRInstance
+			pipeline = new VRInstanceForwardPipeline;
+			auto p = static_cast<VRInstanceForwardPipeline*>(pipeline);
+	#else
+			pipeline = new VRForwardPipeline;
+			auto p = static_cast<VRForwardPipeline*>(pipeline);
+	#endif
 #else
 		pipeline = new ForwardPipeline;
 		auto p = static_cast<ForwardPipeline*>(pipeline);
@@ -66,6 +73,7 @@ public:
 			lastTime = AbsolutTime;
 		}
 
+
 #ifdef VR
 		UpdateProjectView();
 #endif // VR
@@ -78,6 +86,16 @@ public:
 		GUI::NewFrame();
 		ImGui::Begin("Params");
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		//if(ImGui::Button("MSAA"))
+		//	msaa = !msaa;
+		//{
+		//	auto p = static_cast<VRForwardPipeline*>(pipeline);
+		//	if(msaa)
+		//		p->eForward.out_color_left->MSAASampleNum = 4;
+		//	else
+		//		p->eForward.out_color_left->MSAASampleNum = 1;
+		//}
 
 		if (ImGui::TreeNode("Setting"))
 		{
@@ -318,6 +336,13 @@ public:
 	void VRSubmitTexture()
 	{
 		//submit texture
+#ifdef VRInstance	
+		GLuint texID;
+		static_cast<VRInstanceForwardPipeline*>(pipeline)->GetStereoTex(texID);
+		vr::Texture_t EyeTexture = { (void*)texID, vr::API_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(vr::Eye_Left, &EyeTexture);
+		vr::VRCompositor()->Submit(vr::Eye_Right, &EyeTexture);
+#else
 		GLuint leftID, rightID;
 
 		static_cast<VRForwardPipeline*>(pipeline)->GetStereoTex(leftID, rightID);
@@ -326,7 +351,7 @@ public:
 
 		vr::Texture_t rightEyeTexture = { (void*)rightID, vr::API_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-
+#endif
 		glFlush();
 		//glFinish();
 
@@ -349,7 +374,11 @@ public:
 
 	void UpdateProjectView()
 	{
+#ifdef VRInstance
+		auto p = static_cast<VRInstanceForwardPipeline*>(pipeline);
+#else
 		auto p = static_cast<VRForwardPipeline*>(pipeline);
+#endif // VRInstance
 		p->eForward.projLeft = projLeft;
 		p->eForward.projRight = projRight;
 		p->eForward.viewLeft = eyePosLeft * HMDPos;

@@ -10,7 +10,7 @@ using namespace std;
 using namespace HW;
 
 
-class VRForwardEffect :public PipelineEffect {
+class VRInstanceForwardEffect :public PipelineEffect {
 public:
 	virtual void Init();
 	virtual void Render();
@@ -20,8 +20,8 @@ public:
 	string input_cameraname;
 
 	//output
-	RenderTarget* mainwindow, *rt_render_left, *rt_render_right, *rt_resolve_left, *rt_resolve_right;
-	Texture* out_depth_left, *out_depth_right, *out_color_left, *out_color_right;
+	RenderTarget* mainwindow, *rt_render;
+	Texture* out_depth, *out_color;
 
 	Vector3 LightPosition = Vector3(1.0, 20.0, 30.0);
 	Vector3 LightColor = Vector3(1, 1, 1);
@@ -31,13 +31,15 @@ private:
 	as_Pass* forward_pass;
 };
 
-class VRForwardPipeline :public Pipeline {
+
+
+class VRInstanceForwardPipeline :public Pipeline {
 public:
 	virtual void Init();
 	virtual void Render();
 
-	VRForwardEffect eForward;
+	VRInstanceForwardEffect eForward;
 	ShowTextureEffect eShowtex;
 
-	void GetStereoTex(GLuint& l, GLuint& r);
+	void GetStereoTex(GLuint & tex);
 };
