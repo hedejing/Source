@@ -79,7 +79,7 @@ void VarianceShadowMapGenerateEffect::Render()
 		shadowmap_pass->mProgram->setProgramConstantData("view_light", &view_light[0][0], "mat4", sizeof(Matrix4));
 		shadowmap_pass->mProgram->setProgramConstantData("LinearDepth", &LinearDepth, "int", sizeof(int));
 
-		mRenderSystem->RenderPass(MainCamera, queue, shadowmap_pass, ShadowMapRT[i]);
+		mRenderSystem->RenderPass(NULL, queue, shadowmap_pass, ShadowMapRT[i]);
 		//out_ShadowMapTexture[i]->GenerateMipmap();
 		out_ShadowMatrix[i] = scale_bias*proj_light * view_light;
 	}

@@ -75,9 +75,9 @@ void VRForwardEffect::Render()
 	gp->SetViewMatrix(viewRight);
 	/*forward_pass->mProgram->setProgramConstantData("Projection", &projRight, "mat4", sizeof(Matrix4));
 	forward_pass->mProgram->setProgramConstantData("ViewMatrix", &viewRight, "mat4", sizeof(Matrix4));*/
+	mRenderSystem->RenderPass(NULL, queue, forward_pass, rt_render_right);
 	rt_render_right->BlitTexture(rt_resolve_right, "color0", "color0");
 	rt_render_right->BlitTexture(rt_resolve_right, "depth", "depth");
-	mRenderSystem->RenderPass(NULL, queue, forward_pass, rt_render_right);
 }
 
 void VRForwardPipeline::Init()

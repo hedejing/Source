@@ -40,7 +40,7 @@ void GBufferEffect::Render()
 
 	//获取摄像机内的物体，暂时取全部
 	RenderQueue queue;
-	scene->getVisibleRenderQueue_as(camera, queue);//暂时禁用了octree的剔除
+	scene->getVisibleRenderQueue_as(NULL, queue);//暂时禁用了octree的剔除
 
 	float near = camera->getNear();
 	float far = camera->getFar();
@@ -48,6 +48,6 @@ void GBufferEffect::Render()
 	p->setProgramConstantData("near", &near, "float", sizeof(float));
 	p->setProgramConstantData("far", &far, "float", sizeof(float));
 	// render to a buffer
-	mRenderSystem->RenderPass(camera, queue, gbuffer_pass, output_gbufferRT);
+	mRenderSystem->RenderPass(NULL, queue, gbuffer_pass, output_gbufferRT);
 
 }

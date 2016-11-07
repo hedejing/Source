@@ -7,9 +7,11 @@
 #include <fstream>
 #include "VRForwardPipeline.h"
 #include "SimpleProfile.h"
+#include "EdushiVRPipeline.h"
 
 #define VR
 //#define VRInstance
+#define Edushi
 class App_VR_Experience :public App {
 public:
 	bool free = true;
@@ -41,15 +43,21 @@ public:
 			pipeline = new VRInstanceForwardPipeline;
 			auto p = static_cast<VRInstanceForwardPipeline*>(pipeline);
 	#else
+		#ifdef Edushi
+			pipeline = new EdushiVRPipeline;
+			auto p = static_cast<EdushiVRPipeline*>(pipeline);
+		#else
 			pipeline = new VRForwardPipeline;
 			auto p = static_cast<VRForwardPipeline*>(pipeline);
+		#endif // EdushiVRPipeline
 	#endif
 #else
 		pipeline = new ForwardPipeline;
 		auto p = static_cast<ForwardPipeline*>(pipeline);
 #endif // VR
 		pipeline->Init();
-		p->eForward.LightPosition = Vector3(90, 150, 0);
+		//p->eForward.LightPosition = Vector3(90, 150, 0);
+		sysentry->setPipeline(pipeline);
 	}
 
 	void Render() {
@@ -86,17 +94,14 @@ public:
 		GUI::NewFrame();
 		ImGui::Begin("Params");
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-		//if(ImGui::Button("MSAA"))
-		//	msaa = !msaa;
-		//{
-		//	auto p = static_cast<VRForwardPipeline*>(pipeline);
-		//	if(msaa)
-		//		p->eForward.out_color_left->MSAASampleNum = 4;
-		//	else
-		//		p->eForward.out_color_left->MSAASampleNum = 1;
-		//}
-
+#ifdef Edushi
+		auto p = static_cast<EdushiVRPipeline*>(pipeline);
+		if (ImGui::TreeNode("Profile"))
+		{
+			ImGui::TextWrapped(p->profile.ToString().c_str());
+			ImGui::TreePop();
+		}
+#endif
 		if (ImGui::TreeNode("Setting"))
 		{
 			if (ImGui::Button("Reset"))
@@ -345,7 +350,12 @@ public:
 #else
 		GLuint leftID, rightID;
 
+#ifdef Edushi
+		static_cast<EdushiVRPipeline*>(pipeline)->GetStereoTex(leftID, rightID);
+		//((EdushiVRPipeline*)(this->sysentry->m_pipeline))->GetStereoTex(leftID, rightID);
+#else
 		static_cast<VRForwardPipeline*>(pipeline)->GetStereoTex(leftID, rightID);
+#endif // Edushi
 		vr::Texture_t leftEyeTexture = { (void*)leftID, vr::API_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 
@@ -374,6 +384,18 @@ public:
 
 	void UpdateProjectView()
 	{
+#ifdef Edushi
+		/*auto p = static_cast<EdushiVRPipeline*>(pipeline);
+		p->projLeft = projLeft;
+		p->projRight = projRight;
+		p->viewLeft = eyePosLeft * HMDPos;
+		p->viewRight = eyePosRight * HMDPos;*/
+		((EdushiVRPipeline*)(this->sysentry->m_pipeline))->projLeft = projLeft;
+		((EdushiVRPipeline*)(this->sysentry->m_pipeline))->projRight = projRight;
+
+		((EdushiVRPipeline*)(this->sysentry->m_pipeline))->viewLeft = eyePosLeft * HMDPos;
+		((EdushiVRPipeline*)(this->sysentry->m_pipeline))->viewRight = eyePosRight * HMDPos;
+#else
 #ifdef VRInstance
 		auto p = static_cast<VRInstanceForwardPipeline*>(pipeline);
 #else
@@ -383,6 +405,7 @@ public:
 		p->eForward.projRight = projRight;
 		p->eForward.viewLeft = eyePosLeft * HMDPos;
 		p->eForward.viewRight = eyePosRight * HMDPos;
+#endif
 	}
 
 	private:
